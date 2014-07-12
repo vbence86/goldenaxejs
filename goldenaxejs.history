@@ -1,0 +1,13 @@
+Day 0:
+Getting started with the project, prepering myself for the hard work and making some progress with respect of the setting up the development environment.
+
+1) main idea: 
+   * recreation of the old game called Golden Axe (paying tribute, appriciation for the good times)
+   * Having spent a lot of time with this game, I though it would've been a good idea to port to web
+
+2) Initial phase
+   * Estalbishing the deleopment environment (grunt tasks, htmlboilerplate)
+   * Makin the essential design choices 
+      + mostly deciding wich framework should be used: EaselJS, Phraser, melonJS
+   * Installing the required components
+   * Creating a mockup scene to start playing around
