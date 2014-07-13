@@ -1,5 +1,6 @@
 module.exports = function(grunt){
   grunt.initConfig({
+
     csslint: {
       strict: {
         src: ['dist/css/*.css']
@@ -8,9 +9,10 @@ module.exports = function(grunt){
         options: {
           csslintrc: '.csslintrc'
         },
-        src: ['dist/css/*.css']
+        src: ['dist/css/main.css']
       }
     },
+
     sass: {
       dist: {
         options: {
@@ -21,16 +23,33 @@ module.exports = function(grunt){
         }
       }
     },
+
     jshint: {
       all: ['scripts/**/*.js']
     },
+
+  concat: {
+      options: {
+        separator: ';',
+      },
+      dist: {
+        src: [
+          'scripts/universe.js',
+          'scripts/toolkit.js',
+          'scripts/game.js',
+          'scripts/main.js'
+        ],
+        dest: 'dist/js/goldenaxe.js',
+      },
+    },
+
     uglify: {
       dist: {
         options: {
           sourceMap: true
         },
         files: {
-          'dist/js/main.min.js': 'scripts/**/*.js'
+          'dist/js/goldenaxe.min.js': 'dist/js/goldenaxe.js'
         }
       },
       dev: {
@@ -40,10 +59,11 @@ module.exports = function(grunt){
           mangle: false
         },
         files: {
-          'dist/js/main.min.js': 'scripts/**/*.js'
+          'dist/js/goldenaxe.min.js': 'dist/js/goldenaxe.js'
         }  
       }
     },
+
     watch: {
       css: {
         files: ['sass/*.scss'],
@@ -58,7 +78,7 @@ module.exports = function(grunt){
       },
       js: {
         files: ['scripts/**/*.js'],
-        tasks: ['jshint','uglify:dev'],
+        tasks: ['jshint', 'concat', 'uglify:dev'],
         options: {
           livereload: true
         }
@@ -68,8 +88,9 @@ module.exports = function(grunt){
 
   grunt.loadNpmTasks('grunt-contrib-csslint');
   grunt.loadNpmTasks('grunt-contrib-sass');
+  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.registerTask('default', ['sass', 'csslint', 'uglify']);
+  grunt.registerTask('default', ['sass', 'csslint:lax', 'concat', 'uglify:dev']);
 }
