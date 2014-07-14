@@ -29,7 +29,6 @@ U.Game = (function(){
 				if ("function" !== typeof callback){
 					return;
 				}
-				console.log('Resources have been preloaded', preloader.getResult("AxBattler"));
 				callback();
 			});
 			

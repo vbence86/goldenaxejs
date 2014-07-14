@@ -38,6 +38,34 @@ U.Toolkit = U.Toolkit || (function(){
 		}
 	};
 
+	return {
+
+		// exposing the EventDispatcher object
+		EventDispatcher: EventDispatcher,
+
+		// switches between the defined scenes by passing the id of the 
+		// container element
+		switchToScene: (function(){
+			var current;
+
+			return function(sceneId){
+
+				if (!sceneId){
+					return;
+				}
+
+				if (current){
+					$("#" + current).removeClass("shown");
+				}
+				$("#" + sceneId).addClass("shown");
+				current = sceneId;
+
+			};
+
+		})()
+
+	};
+
 })();;var U = window.U || {};
 // Decorating the CreateJS.LoadQueue object
 U.PreLoader = (function(){
@@ -118,7 +146,6 @@ U.Game = (function(){
 				if ("function" !== typeof callback){
 					return;
 				}
-				console.log('Resources have been preloaded', preloader.getResult("AxBattler"));
 				callback();
 			});
 			
@@ -137,24 +164,11 @@ U.Game = (function(){
 })();
 ;(function(U, toolkit, game, window, document, undefined){
 
-	this.switchToScene = (function(){
-		var current;
+	var i,
 
-		return function(sceneId){
-
-			if (!sceneId){
-				return;
-			}
-
-			if (current){
-				$("#" + current).removeClass("shown");
-			}
-			$("#" + sceneId).addClass("shown");
-			current = sceneId;
-
-		};
-
-	})();
+		// game scene elements
+		loadingSceneId = "loading-scene",
+		gameSceneId = "game-scene";
 
 	// adding entry point to initialise the game components
 	window.addEventListener('load', function(){
@@ -162,8 +176,8 @@ U.Game = (function(){
 		// the initialisation process is async as it uses
 		// XHR or XHR2 if it's available to preload the pointed resources
 		game.init(function(){
+			toolkit.switchToScene(gameSceneId);
 			game.start();
-			console.log("Game has been started...");
 		});
 
 
