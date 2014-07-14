@@ -1,26 +1,38 @@
 var U = window.U || {};
+// Using dependecy injection to expose which modules we need to build up
+// this module
 U.Game = (function(){
 	
-	var stage = new createjs.Stage("game-canvas"),
-		circle = new createjs.Shape(),
+	var // decorator object for createjs.LoadQueue
+		// which is responsible for the preloading process
+		preloader = U.PreLoader.create([
+
+			{ src: "img/AxBattlerGA1.gif", id: "AxBattler" }
+
+		]),
+
+		// main stage of the game
+		stage = new createjs.Stage("game-canvas"),
 
 		// handles frame request
 		tick = function(event){
 
-			circle.x = circle.x > 400 ? 0 : (circle.x + 0.1 * event.delta);
 			stage.update();
 
 		};
 
 	return U.Game || {
 
-		init: function(){
+		init: function(callback){
 
-			circle.graphics.beginFill("red").drawCircle(0, 0, 40);
-			circle.x = circle.y = 50;
-			stage.addChild(circle);
-
-			return this;
+			preloader.loadAll().then(function(){
+				if ("function" !== typeof callback){
+					return;
+				}
+				console.log('Resources have been preloaded', preloader.getResult("AxBattler"));
+				callback();
+			});
+			
 		},
 
 		start: function(){
@@ -29,7 +41,6 @@ U.Game = (function(){
 			createjs.Ticker.setFPS(60);
 			createjs.Ticker.addEventListener("tick", tick);
 
-			return this;
 		}
 
 	};

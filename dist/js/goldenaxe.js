@@ -1,6 +1,4 @@
-var U = window.U || (function(window, document, undefined){
-	console.log("Game Universe has been created");
-})(window, window.document);;var U = window.U || {};
+var U = window.U || {};
 U.Toolkit = U.Toolkit || (function(){
 
 	/** ---------------------------------------------------------------	**/
@@ -41,28 +39,89 @@ U.Toolkit = U.Toolkit || (function(){
 	};
 
 })();;var U = window.U || {};
+// Decorating the CreateJS.LoadQueue object
+U.PreLoader = (function(){
+
+	var PreLoader = function(manifest){
+
+		var	loader;
+
+		return {
+
+			loadAll: function(){
+				var defer = function(promise){
+
+					loader = new createjs.LoadQueue(false);
+					loader.addEventListener("complete", promise);
+					loader.loadManifest(manifest);	
+
+				};
+
+				return {
+					then: function(callback){
+						if ('function' !== typeof callback){
+							return;
+						}
+						defer(callback);
+					}
+				};
+			},
+
+			getResult: function(id){
+				return loader.getResult(id);
+			}
+
+		};
+
+	};
+
+	return {
+
+		create: function(manifest){
+			if ("object" !== typeof manifest){
+				throw "Invalid manifest object has been passed!";
+			}
+
+			return new PreLoader(manifest);
+		}
+
+	};
+
+})();;var U = window.U || {};
+// Using dependecy injection to expose which modules we need to build up
+// this module
 U.Game = (function(){
 	
-	var stage = new createjs.Stage("game-canvas"),
-		circle = new createjs.Shape(),
+	var // decorator object for createjs.LoadQueue
+		// which is responsible for the preloading process
+		preloader = U.PreLoader.create([
+
+			{ src: "img/AxBattlerGA1.gif", id: "AxBattler" }
+
+		]),
+
+		// main stage of the game
+		stage = new createjs.Stage("game-canvas"),
 
 		// handles frame request
 		tick = function(event){
 
-			circle.x = circle.x > 400 ? 0 : (circle.x + 0.1 * event.delta);
 			stage.update();
 
 		};
 
 	return U.Game || {
 
-		init: function(){
+		init: function(callback){
 
-			circle.graphics.beginFill("red").drawCircle(0, 0, 40);
-			circle.x = circle.y = 50;
-			stage.addChild(circle);
-
-			return this;
+			preloader.loadAll().then(function(){
+				if ("function" !== typeof callback){
+					return;
+				}
+				console.log('Resources have been preloaded', preloader.getResult("AxBattler"));
+				callback();
+			});
+			
 		},
 
 		start: function(){
@@ -71,22 +130,42 @@ U.Game = (function(){
 			createjs.Ticker.setFPS(60);
 			createjs.Ticker.addEventListener("tick", tick);
 
-			return this;
 		}
 
 	};
 		
-})();;(function(U, toolkit, game, window, document, undefined){
+})();
+;(function(U, toolkit, game, window, document, undefined){
 
-	var gameStarted = false;
+	this.switchToScene = (function(){
+		var current;
+
+		return function(sceneId){
+
+			if (!sceneId){
+				return;
+			}
+
+			if (current){
+				$("#" + current).removeClass("shown");
+			}
+			$("#" + sceneId).addClass("shown");
+			current = sceneId;
+
+		};
+
+	})();
 
 	// adding entry point to initialise the game components
 	window.addEventListener('load', function(){
 
-		game.init()
-			.start();
+		// the initialisation process is async as it uses
+		// XHR or XHR2 if it's available to preload the pointed resources
+		game.init(function(){
+			game.start();
+			console.log("Game has been started...");
+		});
 
-		gameStarted |= 1;
 
 	});
 
