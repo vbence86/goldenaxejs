@@ -43,27 +43,6 @@ U.Toolkit = U.Toolkit || (function(){
 		// exposing the EventDispatcher object
 		EventDispatcher: EventDispatcher,
 
-		// switches between the defined scenes by passing the id of the 
-		// container element
-		switchToScene: (function(){
-			var current;
-
-			return function(sceneId){
-
-				if (!sceneId){
-					return;
-				}
-
-				if (current){
-					$("#" + current).removeClass("shown");
-				}
-				$("#" + sceneId).addClass("shown");
-				current = sceneId;
-
-			};
-
-		})()
-
 	};
 
 })();

@@ -35,3 +35,14 @@ Creating layout for the scenes, providing them with the appropriate CSS
 classes so that the game can switch between them gracefully using 
 fade in/out transitions. 
 Linking the scene switching logic to the preloader object.
+
+------------------------------------------------------------------------
+Day 3
+------------------------------------------------------------------------
+
+Adding event listeners for UI events. As the player will be able control 
+the character either by using the keyboard in dekstop mode or touching the
+virtual controls on Mobiles, I have to provide a unified solution to 
+register business logic to the UI events such as moving towards specified
+directions and so forth.
+

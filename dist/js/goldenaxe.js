@@ -1,4 +1,14 @@
-var U = window.U || {};
+var U = (function(U){
+	var i;
+	// game scene elements
+	U.Scenes = {
+		loadingSceneId: "loading-scene",
+		gameSceneId: "game-scene"
+	};
+
+	return U;
+
+})(window.U || {});;var U = window.U || {};
 U.Toolkit = U.Toolkit || (function(){
 
 	/** ---------------------------------------------------------------	**/
@@ -42,27 +52,6 @@ U.Toolkit = U.Toolkit || (function(){
 
 		// exposing the EventDispatcher object
 		EventDispatcher: EventDispatcher,
-
-		// switches between the defined scenes by passing the id of the 
-		// container element
-		switchToScene: (function(){
-			var current;
-
-			return function(sceneId){
-
-				if (!sceneId){
-					return;
-				}
-
-				if (current){
-					$("#" + current).removeClass("shown");
-				}
-				$("#" + sceneId).addClass("shown");
-				current = sceneId;
-
-			};
-
-		})()
 
 	};
 
@@ -116,37 +105,112 @@ U.PreLoader = (function(){
 	};
 
 })();;var U = window.U || {};
+// Providing generic solution for handling user interactions.
+// As the player will be able control the character either by using 
+// the keyboard in dekstop mode or touching the virtual controls on 
+// Mobiles, I have to provide a unified solution to register business 
+// logic to the UI events. 
+U.UIHandler = window.UIHandler || (function(Modernizr, U, window, undefined){
+
+	var uiEvents = {
+			37: { name: "left", pressed: false },
+			39: { name: "right", pressed: false },
+			38: { name: "up", pressed: false },
+			40: { name: "down", pressed: false }
+		},
+
+		// handling keydown and keyup events
+		handleKeyEvents = function(event){
+			var evt = event || window.event,
+				keyCode = evt.keyCode,
+				uiEventObject = uiEvents[keyCode];
+
+			if (!uiEventObject){
+				return;
+			}
+
+			if ("keydown" === event.type){
+				uiEventObject.pressed = true;
+			} else if ("keyup" === event.type){
+				uiEventObject.pressed = false;
+			}
+		},
+
+		// reference to the game container to attach touch listeners
+		gameScene;
+
+	return {
+
+		attach: function(){
+
+			// touch devices
+			if (Modernizr.touch){
+				gameScene = $('#' + U.Scene.gameSceneId);
+				gameScene.addEventListener("touchstart", handleTouchEvents);
+				gameScene.addEventListener("touchend", handleTouchEvents);
+			} else {
+			// desktop devices
+				window.addEventListener("keydown", handleKeyEvents);
+				window.addEventListener("keyup", handleKeyEvents);
+			}
+
+		},
+
+		isPressed: function(uiEvent){
+			switch (uiEvent){
+				case "left": return uiEvents["37"];
+				case "right": return uiEvents["39"];
+				case "up": return uiEvents["38"];
+				case "down": return uiEvents["40"];
+				default:
+					return false;
+			}
+		}
+
+	};
+
+})(Modernizr, U, window);;var U = window.U || {};
 // Using dependecy injection to expose which modules we need to build up
 // this module
 U.Game = (function(){
 	
-	var // decorator object for createjs.LoadQueue
+	var // main stage of the game
+		stage = new createjs.Stage("game-canvas"),
+
+		// decorator object for createjs.LoadQueue
 		// which is responsible for the preloading process
 		preloader = U.PreLoader.create([
-
 			{ src: "img/AxBattlerGA1.gif", id: "AxBattler" }
-
 		]),
-
-		// main stage of the game
-		stage = new createjs.Stage("game-canvas"),
 
 		// handles frame request
 		tick = function(event){
-
 			stage.update();
+		},
 
-		};
+		// switches between the defined scenes by passing the id of the 
+		// container element
+		switchToScene = (function(){
+			var current;
+			return function(sceneId){
+				if (!sceneId){
+					return;
+				}
+				if (current){
+					$("#" + current).removeClass("shown");
+				}
+				$("#" + sceneId).addClass("shown");
+				current = sceneId;
+			};
+		})();
 
 	return U.Game || {
 
-		init: function(callback){
+		init: function(){
 
 			preloader.loadAll().then(function(){
-				if ("function" !== typeof callback){
-					return;
-				}
-				callback();
+				switchToScene(U.Scenes.gameSceneId);
+				this.start();
 			});
 			
 		},
@@ -164,22 +228,10 @@ U.Game = (function(){
 })();
 ;(function(U, toolkit, game, window, document, undefined){
 
-	var i,
-
-		// game scene elements
-		loadingSceneId = "loading-scene",
-		gameSceneId = "game-scene";
-
 	// adding entry point to initialise the game components
 	window.addEventListener('load', function(){
 
-		// the initialisation process is async as it uses
-		// XHR or XHR2 if it's available to preload the pointed resources
-		game.init(function(){
-			toolkit.switchToScene(gameSceneId);
-			game.start();
-		});
-
+		game.init();
 
 	});
 

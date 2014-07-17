@@ -34,8 +34,10 @@ module.exports = function(grunt){
       },
       dist: {
         src: [
+          'scripts/universe.js',
           'scripts/toolkit.js',
           'scripts/preloader.js',
+          'scripts/uihandler.js',
           'scripts/game.js',
           'scripts/main.js'
         ],

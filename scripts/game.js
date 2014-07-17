@@ -3,33 +3,43 @@ var U = window.U || {};
 // this module
 U.Game = (function(){
 	
-	var // decorator object for createjs.LoadQueue
+	var // main stage of the game
+		stage = new createjs.Stage("game-canvas"),
+
+		// decorator object for createjs.LoadQueue
 		// which is responsible for the preloading process
 		preloader = U.PreLoader.create([
-
 			{ src: "img/AxBattlerGA1.gif", id: "AxBattler" }
-
 		]),
-
-		// main stage of the game
-		stage = new createjs.Stage("game-canvas"),
 
 		// handles frame request
 		tick = function(event){
-
 			stage.update();
+		},
 
-		};
+		// switches between the defined scenes by passing the id of the 
+		// container element
+		switchToScene = (function(){
+			var current;
+			return function(sceneId){
+				if (!sceneId){
+					return;
+				}
+				if (current){
+					$("#" + current).removeClass("shown");
+				}
+				$("#" + sceneId).addClass("shown");
+				current = sceneId;
+			};
+		})();
 
 	return U.Game || {
 
-		init: function(callback){
+		init: function(){
 
 			preloader.loadAll().then(function(){
-				if ("function" !== typeof callback){
-					return;
-				}
-				callback();
+				switchToScene(U.Scenes.gameSceneId);
+				this.start();
 			});
 			
 		},
