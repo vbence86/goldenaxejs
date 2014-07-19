@@ -55,12 +55,25 @@ html, body { height: 100%; }
     top: 0;
     bottom: 0;
 
-    width: 10em;
+    width: 30em;
     height: 10em;
 
     margin: auto;
 }
 
+#progress-bar-container {
+    position: relative;
+    width: 80%;
+    height: 4em;
+
+    border: 1px black solid;
+}
+
+#progress-bar {
+    width: 0;
+    height: 100%;
+    background: black;
+}
 /** ==================================================================== **/
 /** Game Scene
 /** ==================================================================== **/

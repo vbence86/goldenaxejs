@@ -34,10 +34,19 @@ module.exports = function(grunt){
       },
       dist: {
         src: [
+          // basic namespace for the page
           'scripts/universe.js',
+
+          // helpers
           'scripts/toolkit.js',
           'scripts/preloader.js',
           'scripts/uihandler.js',
+
+          // in-game objects
+          'scripts/objects.js',
+          'scripts/objects.monster.js',
+
+          // controllers 
           'scripts/game.js',
           'scripts/main.js'
         ],

@@ -1,36 +1,38 @@
 var U = window.U || {};
 // Decorating the CreateJS.LoadQueue object
-U.PreLoader = (function(){
+U.PreLoader = (function(toolkit){
 
 	var PreLoader = function(manifest){
 
-		var	loader;
+		var	loader = new createjs.LoadQueue(false);
 
-		return {
+		this.loadAll = function(){
+			var defer = function(promise){
 
-			loadAll: function(){
-				var defer = function(promise){
+				loader.addEventListener("complete", promise);
+				loader.loadManifest(manifest);	
 
-					loader = new createjs.LoadQueue(false);
-					loader.addEventListener("complete", promise);
-					loader.loadManifest(manifest);	
+			};
 
-				};
-
-				return {
-					then: function(callback){
-						if ('function' !== typeof callback){
-							return;
-						}
+			return {
+				then: function(callback){
+					if (toolkit.isFunction(callback)){
 						defer(callback);
 					}
-				};
-			},
+				}
+			};
+		};
 
-			getResult: function(id){
-				return loader.getResult(id);
+		this.progress = function(callback){
+			if (toolkit.isFunction(callback)){
+				loader.addEventListener("progress", function(){
+					callback(loader.progress || 0);
+				});
 			}
+		};
 
+		this.getResult = function(id){
+			return loader.getResult(id);
 		};
 
 	};
@@ -47,4 +49,4 @@ U.PreLoader = (function(){
 
 	};
 
-})();
+})(U.Toolkit);

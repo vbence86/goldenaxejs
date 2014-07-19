@@ -3,53 +3,73 @@ var U = window.U || {};
 // this module
 U.Game = (function(){
 	
-	var // main stage of the game
+	var i, j,
+
+		/** ------------------------------------------------------- **/
+		/** GAME STAGE 												**/
+		/** ------------------------------------------------------- **/
+		// main stage of the game
 		stage = new createjs.Stage("game-canvas"),
 
-		// decorator object for createjs.LoadQueue
-		// which is responsible for the preloading process
-		preloader = U.PreLoader.create([
-			{ src: "img/AxBattlerGA1.gif", id: "AxBattler" }
-		]),
+
+		/** ------------------------------------------------------- **/
+		/** INIT GAME 												**/
+		/** ------------------------------------------------------- **/
+		setupObjects = function(){
+
+		},
+
+		/** ------------------------------------------------------- **/
+		/** GAME LOOP 												**/
+		/** ------------------------------------------------------- **/
+		// starting main game loop and registering a tick function
+		startGameLoop = function(){
+			createjs.Ticker.timingMode = createjs.Ticker.RAF;
+			createjs.Ticker.setFPS(60);
+			createjs.Ticker.addEventListener("tick", tick);
+		},
 
 		// handles frame request
 		tick = function(event){
-			stage.update();
+			tickAllObjects(event);
+			stage.update(event);
 		},
 
-		// switches between the defined scenes by passing the id of the 
-		// container element
-		switchToScene = (function(){
-			var current;
-			return function(sceneId){
-				if (!sceneId){
-					return;
-				}
-				if (current){
-					$("#" + current).removeClass("shown");
-				}
-				$("#" + sceneId).addClass("shown");
-				current = sceneId;
-			};
-		})();
+		// calling the tick function of all the registered objects
+		tickAllObjects = function(event){
+			var objects = U.Objects.getObjects();
+			for (var i = objects.length - 1; i >= 0; i--) {
+				objects[i].tick(event);
+			}
+		};
 
-	return U.Game || {
+	return {
 
 		init: function(){
 
-			preloader.loadAll().then(function(){
-				switchToScene(U.Scenes.gameSceneId);
-				this.start();
-			});
+			var that = this;
+
+			U.getPreloader()
+			 .loadAll()
+			 .then(function(){
+				U.switchToScene(U.Scenes.gameSceneId);
+				(that || U.Game).start();
+			 });
+
+			U.UIHandler.attach();
 			
 		},
 
 		start: function(){
 
-			createjs.Ticker.timingMode = createjs.Ticker.RAF;
-			createjs.Ticker.setFPS(60);
-			createjs.Ticker.addEventListener("tick", tick);
+			setupObjects();
+			startGameLoop();
+		},
 
+		// exposing the main stage so that we can reference to it 
+		// outside from the Game scope
+		getStage: function(){
+			return stage;
 		}
 
 	};

@@ -43,6 +43,10 @@ U.Toolkit = U.Toolkit || (function(){
 		// exposing the EventDispatcher object
 		EventDispatcher: EventDispatcher,
 
+		isFunction: function(func){
+			return 'function' === typeof func;
+		}
+
 	};
 
 })();

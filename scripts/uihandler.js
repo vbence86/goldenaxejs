@@ -50,15 +50,20 @@ U.UIHandler = window.UIHandler || (function(Modernizr, U, window, undefined){
 
 		},
 
-		isPressed: function(uiEvent){
+		isFired: function(uiEvent){
+			var code;
 			switch (uiEvent){
-				case "left": return uiEvents["37"];
-				case "right": return uiEvents["39"];
-				case "up": return uiEvents["38"];
-				case "down": return uiEvents["40"];
+				case "left": code = 37; break;
+				case "right": code = 39; break;
+				case "up": code = 38; break;
+				case "down": code = 40; break;
 				default:
 					return false;
 			}
+			if (!uiEvents[code]){
+				return false;
+			}
+			return uiEvents[code].pressed;
 		}
 
 	};
