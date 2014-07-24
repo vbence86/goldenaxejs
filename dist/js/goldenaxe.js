@@ -6,7 +6,9 @@ var U = (function(U){
 		// list of the files that are being preloaded during
 		manifest = [
 			{ src: "img/AxBattlerGA1.gif", id: "AxBattler" },
-			{ src: "img/runningGrant.png", id: "grant"}
+			{ src: "img/runningGrant.png", id: "grant"},
+			{ src: "img/mountain_landscape_23.png", id: "tilesetSheet"},
+			{ src: "data/mountain.json", id: "mountain.json"},
 		],
 
 		// updating the progress-bar in the loading-scene
@@ -233,6 +235,129 @@ U.UIHandler = window.UIHandler || (function(Modernizr, U, window, undefined){
 
 })(Modernizr, U, window);;var U = window.U || {};
 
+U.Map = (function(toolkit){
+
+	var engine = (function(){
+
+		var data,
+			tilesetSheet,
+			layerContainers = [],
+
+		// setting up the required components to construct the map
+		// exportd from Tiled
+		setData = function(json){
+			data = json;
+		};
+
+		// loading the spritesheets used for the layer elements
+		loadTileset = function(){
+
+			var imageData = {
+					images : [U.getPreloader().getResult("tilesetSheet")],
+					frames : {
+						width : data.tilesets[0].tilewidth,
+						height : data.tilesets[0].tileheight
+					}
+				};
+
+			// create spritesheet
+			tilesetSheet = new createjs.SpriteSheet(imageData);
+
+		};
+
+		createLayerContainers = function(){
+			var layers = data.layers,
+				container;
+			for (var i = 0, l = layers.length; i < l; i++){
+				layers[i].container = container = new createjs.Container();
+				layerContainers.push(container);
+			}
+		};
+
+		// populate the created containers with the corresponding items
+		generateMap = function() {
+			var layers = data.layers;
+			for (var i = 0, l = layers.length; i < l; i++){
+				generateItems(layers[i]);
+			}
+		};
+
+		// populate the passed container with the items linked to it
+		generateItems = function(layer) {
+
+			if (layer.type !== "tilelayer" || !layer.opacity) { 
+				return; 
+			}
+
+			var size = data.tilewidth;
+
+			layer.data.forEach(function(tile_idx, i){
+
+				if (!tile_idx) { 
+					return; 
+				}
+
+				var tileSprite = new createjs.Sprite(tilesetSheet);
+				// tilemap data uses 1 as first value, EaselJS uses 0 (sub 1 to load correct tile)
+				tileSprite.gotoAndStop(tile_idx - 1);
+				// translate the tile's positions
+				tileSprite.x = (i % layer.width) * size;
+				tileSprite.y = ~~(i / layer.width) * size;
+				// add bitmap to stage
+				layer.container.addChild(tileSprite);
+
+			});
+
+		};
+
+		return {
+
+			create: function(json){
+				setData(json);
+				createLayerContainers();
+				loadTileset();
+				return this;
+			},
+
+			generate: function(){
+				generateMap();
+				return this;
+			},
+
+			/*getLayers: function(){
+				return layerContainers;
+			},*/
+
+			appendLayersToStage: function(stage){
+				if (!stage || !stage.addChild){
+					throw "Invalid Stage object has been passed!";
+				}
+				for (var i = 0, l = layerContainers.length; i < l; i++){
+					stage.addChild(layerContainers[i]);
+				}
+				return this;
+			}
+		};
+
+	})();
+
+
+	return {
+
+		loadMap: function(json){
+			engine.create(json);			
+		},
+
+		appendTo: function(stage){
+			engine
+				.generate()
+				.appendLayersToStage(stage);
+		}
+
+	};
+
+})(U.Toolkit);;var U = window.U || {};
+
 // common unified functions to handle interractions with game objects
 U.Objects = (function(O){
 
@@ -303,7 +428,7 @@ U.Objects = (function(O){
 	O.removeObject = function(id){
 		var object = getObjectById(id), i;
 		// removing the object from the game stage
-		object.getParent().removeChild(object);
+		object.getStage().removeChild(object);
 		// removing the object from our storage
 		for (i = objects.length - 1; i >= 0; i--) {
 			if (id === objects[i].guid){
@@ -327,36 +452,24 @@ U.Objects.Monster = (function () {
 	var p = Monster.prototype = new createjs.Container();
 
 	// public properties:
-	p.monsterShape = null;
+	p.shape = null;
 
 	// velocity values
 	p.vX = null;
 	p.vY = null;
 
-	// parent object
-	p.parent = null;
-
 	// constructor:
 	p.Container_initialize = p.initialize;	//unique to avoid overiding base class
 
-	p.createSprite = function(){
-
-		var spriteSheet = new createjs.SpriteSheet({
-			"images": [U.getPreloader().getResult("grant")],
-			"frames": {"regX": 0, "height": 292, "count": 64, "regY": 0, "width": 165},
-			// define two animations, run (loops, 1.5x speed) and jump (returns to run):
-			"animations": {"run": [0, 25, "run", 1.5], "jump": [26, 63, "run"]}
-		});
-
-		this.monsterShape = new createjs.Sprite(spriteSheet);
-		this.monsterShape.framerate = 30;
-		this.addChild(this.monsterShape);
+	p.createSprite = function(spriteSheet){
+		this.shape = new createjs.Sprite(spriteSheet);
+		this.addChild(this.shape);
 	};
 
-	p.initialize = function(){
+	p.initialize = function(spriteSheet){
 		this.Container_initialize();
 
-		this.createSprite();
+		this.createSprite(spriteSheet);
 
 		this.vX = 0;
 		this.vY = 0;
@@ -367,11 +480,6 @@ U.Objects.Monster = (function () {
 			throw "Invalid stage object given as a parameter!";
 		}
 		stage.addChild(this);
-		this.parent = stage;
-	};
-
-	p.getParent = function(){
-		return this.parent;
 	};
 
 	p.tick = function (event) {
@@ -383,6 +491,36 @@ U.Objects.Monster = (function () {
 	return Monster;
 
 }());;var U = window.U || {};
+U.Objects = U.Objects || {};
+
+U.Objects.Grant = (function (monster) {
+
+	function Grant() {
+		this.initialize();
+	}
+
+	var p = Grant.prototype = new monster();
+
+	// constructor:
+	p.Monster_initialize = p.initialize;	//unique to avoid overiding base class
+
+	p.initialize = function(){
+
+		// specifying spritesheet
+		var spriteSheet = new createjs.SpriteSheet({
+			"framerate": 30,
+			"images": [U.getPreloader().getResult("grant")],
+			"frames": {"regX": 0, "height": 292, "count": 64, "regY": 0, "width": 165},
+			// define two animations, run (loops, 1.5x speed) and jump (returns to run):
+			"animations": {"run": [0, 25, "run", 1.5], "jump": [26, 63, "run"]}
+		});
+
+		this.Monster_initialize(spriteSheet);
+	};
+
+	return Grant;
+
+}(U.Objects.Monster));;var U = window.U || {};
 // Using dependecy injection to expose which modules we need to build up
 // this module
 U.Game = (function(){

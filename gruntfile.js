@@ -42,9 +42,13 @@ module.exports = function(grunt){
           'scripts/preloader.js',
           'scripts/uihandler.js',
 
+          // map
+          'scripts/map.js',
+
           // in-game objects
           'scripts/objects.js',
           'scripts/objects.monster.js',
+          'scripts/objects.grant.js',
 
           // controllers 
           'scripts/game.js',

@@ -70,7 +70,7 @@ U.Objects = (function(O){
 	O.removeObject = function(id){
 		var object = getObjectById(id), i;
 		// removing the object from the game stage
-		object.getParent().removeChild(object);
+		object.getStage().removeChild(object);
 		// removing the object from our storage
 		for (i = objects.length - 1; i >= 0; i--) {
 			if (id === objects[i].guid){

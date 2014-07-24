@@ -6,7 +6,9 @@ var U = (function(U){
 		// list of the files that are being preloaded during
 		manifest = [
 			{ src: "img/AxBattlerGA1.gif", id: "AxBattler" },
-			{ src: "img/runningGrant.png", id: "grant"}
+			{ src: "img/runningGrant.png", id: "grant"},
+			{ src: "img/mountain_landscape_23.png", id: "tilesetSheet"},
+			{ src: "data/mountain.json", id: "mountain.json"},
 		],
 
 		// updating the progress-bar in the loading-scene
