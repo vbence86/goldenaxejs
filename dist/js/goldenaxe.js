@@ -241,7 +241,6 @@ U.Map = (function(toolkit){
 
 		var data,
 			tilesetSheet,
-			layerContainers = [],
 
 		// setting up the required components to construct the map
 		// exportd from Tiled
@@ -269,8 +268,8 @@ U.Map = (function(toolkit){
 			var layers = data.layers,
 				container;
 			for (var i = 0, l = layers.length; i < l; i++){
-				layers[i].container = container = new createjs.Container();
-				layerContainers.push(container);
+				container = new createjs.Container();
+				layers[i].container = container;
 			}
 		};
 
@@ -282,32 +281,71 @@ U.Map = (function(toolkit){
 			}
 		};
 
+		createTileElementXY = function(elemId, x, y){
+			var tileSprite = new createjs.Sprite(tilesetSheet);
+			// tilemap data uses 1 as first value, EaselJS uses 0 (sub 1 to load correct tile)
+			tileSprite.gotoAndStop(elemId);
+			// translate the tile's positions
+			tileSprite.x = x * data.tilewidth;
+			tileSprite.y = y * data.tilewidth;
+			tileSprite.elemId = elemId;
+
+			return tileSprite;
+		};
+
+		removeTileElementXY = function(){
+			var args = Array.prototype.slice.call(arguments),
+				layer = args[0],
+				index;
+
+			if (!layer){
+				return;
+			}
+
+			if (args.length === 2){
+				index = args[1];
+			} else if (args.length === 3) {
+				index = args[1] % layer.width + args[2] * layer.width;
+			}
+
+			if (layer.elements[index]){
+				layer.container.removeChild(layer.elements[index]);
+			}
+			layer.data[index] = 0;
+		};
+
 		// populate the passed container with the items linked to it
 		generateItems = function(layer) {
+
+			var i, j, tileData, elem, index;
 
 			if (layer.type !== "tilelayer" || !layer.opacity) { 
 				return; 
 			}
 
-			var size = data.tilewidth;
+			for (i = 0; i < layer.width; i++) {
+				for (j = 0; j < layer.height; j++) {
 
-			layer.data.forEach(function(tile_idx, i){
+					index = i % layer.width + j * layer.width;
+					tileData = layer.data[index];
 
-				if (!tile_idx) { 
-					return; 
+					if (!tileData){
+						continue;
+					}
+
+					elem = createTileElementXY(tileData - 1, i, j);
+					if (!layer.elements){
+						layer.elements = [];
+					}
+					layer.elements[index] = elem;
+					layer.container.addChild(elem);
 				}
+			}
+		};
 
-				var tileSprite = new createjs.Sprite(tilesetSheet);
-				// tilemap data uses 1 as first value, EaselJS uses 0 (sub 1 to load correct tile)
-				tileSprite.gotoAndStop(tile_idx - 1);
-				// translate the tile's positions
-				tileSprite.x = (i % layer.width) * size;
-				tileSprite.y = ~~(i / layer.width) * size;
-				// add bitmap to stage
-				layer.container.addChild(tileSprite);
-
-			});
-
+		getTileElementXY = function(layer, x, y){
+			var index = x % layer.width + y * layer.width;
+			return layer.elements[index];
 		};
 
 		return {
@@ -324,16 +362,20 @@ U.Map = (function(toolkit){
 				return this;
 			},
 
-			/*getLayers: function(){
+			getLayers: function(){
 				return layerContainers;
-			},*/
+			},
+
+			remove: function(x, y){
+				removeTileElementXY(data.layers[0], x, y);
+			},
 
 			appendLayersToStage: function(stage){
 				if (!stage || !stage.addChild){
 					throw "Invalid Stage object has been passed!";
 				}
-				for (var i = 0, l = layerContainers.length; i < l; i++){
-					stage.addChild(layerContainers[i]);
+				for (var i = 0, l = data.layers.length; i < l; i++){
+					stage.addChild(data.layers[i].container);
 				}
 				return this;
 			}
@@ -352,6 +394,10 @@ U.Map = (function(toolkit){
 			engine
 				.generate()
 				.appendLayersToStage(stage);
+		},
+
+		remove: function(x, y){
+			engine.remove(x, y);
 		}
 
 	};
