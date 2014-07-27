@@ -103,3 +103,23 @@ Day 10
 
 Cleaning up the map loader code, removing the asyncronious fashion from the tileset loading process.
 Adding easeljs.Container objects to each of the layers declared in the generated Map file. Adding all the tile elements to these Containers in order to make it possible to scroll them using different velocity.
+
+------------------------------------------------------------------------
+Day 11
+------------------------------------------------------------------------
+
+Refactoring map loader code in order to be more readable and reusable.
+
+------------------------------------------------------------------------
+Day 12
+------------------------------------------------------------------------
+
+Finishing to refactor the map loader and renderer code
+Adding scrolling logic to map manager object
+
+------------------------------------------------------------------------
+Day 13
+------------------------------------------------------------------------
+
+Scrolling has been restricted depending on the current viewport and the used map size.
+TweenJS has been added to the project to perform smooth animations while scrolling.

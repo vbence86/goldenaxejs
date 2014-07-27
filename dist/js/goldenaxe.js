@@ -235,12 +235,104 @@ U.UIHandler = window.UIHandler || (function(Modernizr, U, window, undefined){
 
 })(Modernizr, U, window);;var U = window.U || {};
 
-U.Map = (function(toolkit){
+U.Map = (function(toolkit, undefined){
 
 	var engine = (function(){
 
 		var data,
+			layers,
 			tilesetSheet,
+			layerContainer;
+
+		function Layer(layerData){
+			if (!layerData.data){
+				throw "Invalid layer data has been passed!";
+			}
+			this.init(layerData);
+		}
+
+		Layer.prototype = {
+			init: function(layerData){
+
+				var i, tile;
+
+				this.tiles = [];
+				this.width = layerData.width;
+				this.height = layerData.height;
+				this.pixelWidth = layerData.width * tilesetSheet._frameWidth;
+				this.pixelHeight = layerData.height * tilesetSheet._frameHeight;
+
+				this.container = new createjs.Container();
+
+				for (i = layerData.data.length - 1; i >= 0; i--) {
+					tile = new Tile(layerData.data[i]);
+					x = i % layerData.width;
+					y = Math.floor(i / layerData.width);
+
+					tile.appendToLayer(this)
+						.putTo(x, y);
+				}
+
+			},
+			appendTo: function(container){
+				container.addChild(this.container);
+			},
+			getContainer: function(){
+				return this.container;
+			},
+			getTiles: function(){
+				return tiles;
+			},
+			getWidth: function(){
+				return this.width;
+			},
+			getHeight: function(){
+				return this.height;
+			},
+			getWidthInPixels: function(){
+				return this.pixelWidth;
+			},
+			getHeightInPixels: function(){
+				return this.pixelHeight;
+			}
+		};
+
+
+		function Tile(id){
+			if (undefined === id){
+				throw "Invalid identifier has been given!";
+			}
+			this.init(id);
+		}
+
+		Tile.prototype = {
+			init: function(id){
+				this.sprite = new createjs.Sprite(tilesetSheet);
+				// 0 is reserved in Tile editor, thus we have to
+				// decrease the id to get the appropriate frame
+				this.sprite.gotoAndStop(id - 1);
+				this.id = id;
+			},
+			putTo: function(x, y){
+				this.x = x;
+				this.y = y;
+				this.sprite.x = x * tilesetSheet._frameWidth;
+				this.sprite.y = y * tilesetSheet._frameHeight;
+				return this;
+			},
+			appendToLayer: function(layer){
+				layer.getContainer()
+					 .addChild(this.sprite);
+				this.parent = layer;
+				return this;			
+			},
+			getSprite: function(){
+				return this.sprite;
+			},
+			getId: function(){
+				return this.id;
+			}
+		};
 
 		// setting up the required components to construct the map
 		// exportd from Tiled
@@ -264,121 +356,60 @@ U.Map = (function(toolkit){
 
 		};
 
-		createLayerContainers = function(){
-			var layers = data.layers,
-				container;
-			for (var i = 0, l = layers.length; i < l; i++){
-				container = new createjs.Container();
-				layers[i].container = container;
-			}
-		};
-
-		// populate the created containers with the corresponding items
-		generateMap = function() {
-			var layers = data.layers;
-			for (var i = 0, l = layers.length; i < l; i++){
-				generateItems(layers[i]);
-			}
-		};
-
-		createTileElementXY = function(elemId, x, y){
-			var tileSprite = new createjs.Sprite(tilesetSheet);
-			// tilemap data uses 1 as first value, EaselJS uses 0 (sub 1 to load correct tile)
-			tileSprite.gotoAndStop(elemId);
-			// translate the tile's positions
-			tileSprite.x = x * data.tilewidth;
-			tileSprite.y = y * data.tilewidth;
-			tileSprite.elemId = elemId;
-
-			return tileSprite;
-		};
-
-		removeTileElementXY = function(){
-			var args = Array.prototype.slice.call(arguments),
-				layer = args[0],
-				index;
-
-			if (!layer){
-				return;
+		createLayers = function(){
+			var i, l, layer, 
+				layersArray = data.layers;
+			if (!layersArray || !layersArray.length){
+				throw "Invalid argument has been passed!";
 			}
 
-			if (args.length === 2){
-				index = args[1];
-			} else if (args.length === 3) {
-				index = args[1] % layer.width + args[2] * layer.width;
+			layers = [];
+			layerContainer = new createjs.Container();
+
+			for (i = 0, l = layersArray.length; i < l; i++){
+				layer = new Layer(layersArray[i]);
+				layer.appendTo(layerContainer);
+				layers.push(layer);
 			}
-
-			if (layer.elements[index]){
-				layer.container.removeChild(layer.elements[index]);
-			}
-			layer.data[index] = 0;
-		};
-
-		// populate the passed container with the items linked to it
-		generateItems = function(layer) {
-
-			var i, j, tileData, elem, index;
-
-			if (layer.type !== "tilelayer" || !layer.opacity) { 
-				return; 
-			}
-
-			for (i = 0; i < layer.width; i++) {
-				for (j = 0; j < layer.height; j++) {
-
-					index = i % layer.width + j * layer.width;
-					tileData = layer.data[index];
-
-					if (!tileData){
-						continue;
-					}
-
-					elem = createTileElementXY(tileData - 1, i, j);
-					if (!layer.elements){
-						layer.elements = [];
-					}
-					layer.elements[index] = elem;
-					layer.container.addChild(elem);
-				}
-			}
-		};
-
-		getTileElementXY = function(layer, x, y){
-			var index = x % layer.width + y * layer.width;
-			return layer.elements[index];
 		};
 
 		return {
 
-			create: function(json){
+			load: function(json){
 				setData(json);
-				createLayerContainers();
 				loadTileset();
+				createLayers();
 				return this;
 			},
 
-			generate: function(){
-				generateMap();
-				return this;
-			},
-
-			getLayers: function(){
-				return layerContainers;
-			},
-
-			remove: function(x, y){
-				removeTileElementXY(data.layers[0], x, y);
-			},
-
-			appendLayersToStage: function(stage){
+			appendTo: function(stage){
 				if (!stage || !stage.addChild){
 					throw "Invalid Stage object has been passed!";
 				}
-				for (var i = 0, l = data.layers.length; i < l; i++){
-					stage.addChild(data.layers[i].container);
+				for (var i = 0, l = layers.length; i < l; i++){
+					stage.addChild(layerContainer);
 				}
 				return this;
+			},
+
+			scrollTo: function(x, y){
+				var viewportWidth = U.Game.getViewportWidth(),
+					viewportHeight = U.Game.getViewportHeight(),
+					scrollableWidth = Math.max(0, layers[0].getWidthInPixels() - viewportWidth),
+					scrollableHeight = Math.max(0, layers[0].getHeightInPixels() - viewportWidth);
+				x = Math.max(0, Math.min(x, scrollableWidth));
+				y = Math.max(0, Math.min(y, scrollableHeight));
+				layerContainer.setTransform(-x, -y);
+			},
+
+			getLayers: function(){
+				return layers;
+			},
+
+			getContainer: function(){
+				return layerContainer;
 			}
+
 		};
 
 	})();
@@ -387,17 +418,15 @@ U.Map = (function(toolkit){
 	return {
 
 		loadMap: function(json){
-			engine.create(json);			
+			engine.load(json);			
 		},
 
 		appendTo: function(stage){
-			engine
-				.generate()
-				.appendLayersToStage(stage);
+			engine.appendTo(stage);
 		},
 
-		remove: function(x, y){
-			engine.remove(x, y);
+		scrollTo: function(x, y){
+			engine.scrollTo(x, y);
 		}
 
 	};
@@ -638,6 +667,18 @@ U.Game = (function(){
 		// outside from the Game scope
 		getStage: function(){
 			return stage;
+		},
+
+		// returning the width of the staging area in pixels depending on 
+		// the viewport
+		getViewportWidth: function(){
+			return this.getStage().canvas.width;
+		},
+
+		// returning the height of the staging area in pixels depending on 
+		// the viewport
+		getViewportHeight: function(){
+			return this.getStage().canvas.height;
 		}
 
 	};

@@ -70,6 +70,18 @@ U.Game = (function(){
 		// outside from the Game scope
 		getStage: function(){
 			return stage;
+		},
+
+		// returning the width of the staging area in pixels depending on 
+		// the viewport
+		getViewportWidth: function(){
+			return this.getStage().canvas.width;
+		},
+
+		// returning the height of the staging area in pixels depending on 
+		// the viewport
+		getViewportHeight: function(){
+			return this.getStage().canvas.height;
 		}
 
 	};
