@@ -123,3 +123,15 @@ Day 13
 
 Scrolling has been restricted depending on the current viewport and the used map size.
 TweenJS has been added to the project to perform smooth animations while scrolling.
+
+------------------------------------------------------------------------
+Day 15
+------------------------------------------------------------------------
+
+Adding a centerTo function to the U.Map object so that we could follow a individual monster that most of the time should be the player's monster.
+
+------------------------------------------------------------------------
+Day 16
+------------------------------------------------------------------------
+
+Testing centerTo function

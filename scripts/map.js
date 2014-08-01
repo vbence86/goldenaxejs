@@ -161,10 +161,19 @@ U.Map = (function(toolkit, undefined){
 				var viewportWidth = U.Game.getViewportWidth(),
 					viewportHeight = U.Game.getViewportHeight(),
 					scrollableWidth = Math.max(0, layers[0].getWidthInPixels() - viewportWidth),
-					scrollableHeight = Math.max(0, layers[0].getHeightInPixels() - viewportWidth);
+					scrollableHeight = Math.max(0, layers[0].getHeightInPixels() - viewportHeight);
 				x = Math.max(0, Math.min(x, scrollableWidth));
 				y = Math.max(0, Math.min(y, scrollableHeight));
 				layerContainer.setTransform(-x, -y);
+			},
+
+			centerTo: function(x, y){
+				var viewportWidth = U.Game.getViewportWidth(),
+					viewportHeight = U.Game.getViewportHeight(),
+					scrollX = x - Math.round(viewportWidth / 2),
+					scrollY = y - Math.round(viewportHeight / 2);
+
+				this.scrollTo(scrollX, scrollY);
 			},
 
 			getLayers: function(){
@@ -192,6 +201,10 @@ U.Map = (function(toolkit, undefined){
 
 		scrollTo: function(x, y){
 			engine.scrollTo(x, y);
+		},
+
+		centerTo: function(monster){
+			engine.centerTo(monster.x, monster.y);
 		}
 
 	};
