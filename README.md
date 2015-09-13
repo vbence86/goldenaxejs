@@ -1,4 +1,4 @@
 goldenaxejs
 ===========
 
-Remake of the famous old arcade game "Golden Axe" and porting to HTML5. Any feedback or contribution are welcomed.
+HTML5 port of the classic arcade game Golden Axe using EaselJS as the basis of the framework in which the game is being created. Any feedback or contribution are welcomed.
